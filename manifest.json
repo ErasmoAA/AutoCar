@@ -1,9 +1,25 @@
-Para que la PWA sea instalable, necesitarás crear una carpeta llamada `icons` en el mismo directorio que tus archivos HTML y colocar dentro los siguientes dos iconos (puedes descargarlos o crear los tuyos):
+{
+  "name": "Control de Mantenimiento Vehicular",
+  "short_name": "Control Auto",
+  "description": "Una PWA para gestionar el mantenimiento de tu vehículo, SOAT y Revisión Técnica.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16213e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
+```
 
-* `icon-192x192.png`: Un icono de 192x192 píxeles.
-* `icon-512x512.png`: Un icono de 512x512 píxeles.
-
-Puedes usar generadores de iconos PWA en línea para crear fácilmente estos archivos a partir de una imagen base.
-
-**Ejemplo de imagen que puedes usar:**
-[Imagen de un icono de coche y herramienta](https://placehold.co/512x512/3498db/ffffff?text=Auto)
+**Cambio importante:** He cambiado `"start_url": "index.html"` por `"start_url": "."`. Esto a veces ayuda a que los navegadores encuentren la página principal de forma más fiable.
