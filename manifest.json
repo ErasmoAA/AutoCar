@@ -1,0 +1,9 @@
+Para que la PWA sea instalable, necesitarás crear una carpeta llamada `icons` en el mismo directorio que tus archivos HTML y colocar dentro los siguientes dos iconos (puedes descargarlos o crear los tuyos):
+
+* `icon-192x192.png`: Un icono de 192x192 píxeles.
+* `icon-512x512.png`: Un icono de 512x512 píxeles.
+
+Puedes usar generadores de iconos PWA en línea para crear fácilmente estos archivos a partir de una imagen base.
+
+**Ejemplo de imagen que puedes usar:**
+[Imagen de un icono de coche y herramienta](https://placehold.co/512x512/3498db/ffffff?text=Auto)

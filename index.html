@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Vehicular</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Theme Color for PWA -->
+    <meta name="theme-color" content="#333344">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Control Vehicular">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+    <style>
+        /* General Styles & CSS Variables */
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --card-bg: #2c3e50;
+            --text-color: #e0e0e0;
+            --primary-accent: #0f3460;
+            --secondary-accent: #e94560;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --info-color: #3498db;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            height: 100%;
+            overscroll-behavior-y: contain;
+        }
+
+        /* App Layout */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--secondary-bg);
+        }
+
+        main {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem 6rem 1rem; /* Padding bottom for nav bar */
+        }
+
+        /* Hide all sections by default */
+        .app-section {
+            display: none;
+        }
+        
+        /* Show the active section */
+        .app-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bottom Navigation Bar */
+        #app-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--primary-accent);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0;
+            flex-grow: 1;
+            cursor: pointer;
+            color: var(--text-color);
+            opacity: 0.7;
+            transition: opacity 0.3s, background-color 0.3s;
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            opacity: 1;
+            background-color: var(--primary-accent);
+        }
+
+        /* General UI Components */
+        h1, h2, h3 {
+            color: var(--info-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary-bg);
+            border: 1px solid var(--primary-accent);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--secondary-accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #d83a56;
+        }
+        
+        .btn-secondary {
+            background-color: var(--info-color);
+        }
+        .btn-secondary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+
+        /* Initial Setup Wizard */
+        .wizard-step {
+            display: none;
+        }
+        .wizard-step.active {
+            display: block;
+        }
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        /* Dashboard Specific Styles */
+        #dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .dashboard-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .dashboard-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--info-color);
+        }
+
+        .dashboard-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-card .unit {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Status indicators */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-green { color: var(--success-color); }
+        .status-green .status-dot { background-color: var(--success-color); }
+        .status-yellow { color: var(--warning-color); }
+        .status-yellow .status-dot { background-color: var(--warning-color); }
+        .status-orange { color: #f39c12; }
+        .status-orange .status-dot { background-color: #f39c12; }
+        .status-red { color: var(--danger-color); }
+        .status-red .status-dot { background-color: var(--danger-color); }
+
+        /* History List */
+        #history-list {
+            list-style: none;
+        }
+        .history-item {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 5px solid var(--info-color);
+        }
+        .history-item h4 {
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+        .history-item p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.25rem;
+        }
+        .history-item .note {
+            font-style: italic;
+            opacity: 1;
+            margin-top: 0.5rem;
+            background-color: var(--primary-bg);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Tips Section */
+        .tip-category h3 {
+            text-align: left;
+            border-bottom: 2px solid var(--primary-accent);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .tip-item {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--secondary-bg);
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid var(--primary-accent);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <main>
+            <!-- ======================= -->
+            <!-- INITIAL SETUP SECTION -->
+            <!-- ======================= -->
+            <section id="initial-setup" class="app-section">
+                <h1>Configuración Inicial</h1>
+                <div class="card">
+                    <form id="setup-form">
+                        <!-- Step 1: Vehicle Data -->
+                        <div id="step-1" class="wizard-step active">
+                            <h3>Paso 1: Datos del Vehículo</h3>
+                            <div class="form-group">
+                                <label for="marca">Marca</label>
+                                <input type="text" id="marca" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="modelo">Modelo</label>
+                                <input type="text" id="modelo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ano">Año</label>
+                                <input type="number" id="ano" required placeholder="Ej: 2020">
+                            </div>
+                            <div class="form-group">
+                                <label for="kilometraje-inicial">Kilometraje Actual (km)</label>
+                                <input type="number" id="kilometraje-inicial" required placeholder="Ej: 50000">
+                            </div>
+                            <div class="wizard-nav">
+                                <button type="button" class="btn" onclick="App.navigateWizard(2)">Siguiente</button>
+                            </div>
+                        </div>
+                        <!-- Step 2: Legal Dates -->
+                        <div id="step-2" class="wizard-step">
+                            <h3>Paso 2: Fechas Legales</h3>
+                            <div class="form-group">
+                                <label for="soat">Vencimiento del SOAT</label>
+                                <input type="date" id="soat" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="revision">Vencimiento Revisión Técnica</label>
+                                <input type="date" id="revision" required>
+                            </div>
+                            <div class="wizard-nav">
+                                <button type="button" class="btn btn-secondary" onclick="App.navigateWizard(1)">Anterior</button>
+                                <button type="button" class="btn" onclick="App.navigateWizard(3)">Siguiente</button>
+                            </div>
+                        </div>
+                        <!-- Step 3: Maintenance Config -->
+                        <div id="step-3" class="wizard-step">
+                            <h3>Paso 3: Mantenimiento</h3>
+                            <div class="form-group">
+                                <label for="intervalo">Intervalo de Mantenimiento (km)</label>
+                                <input type="number" id="intervalo" required placeholder="Ej: 5000">
+                            </div>
+                            <div class="wizard-nav">
+                                <button type="button" class="btn btn-secondary" onclick="App.navigateWizard(2)">Anterior</button>
+                                <button type="submit" class="btn">Finalizar Configuración</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ======================= -->
+            <!-- DASHBOARD SECTION       -->
+            <!-- ======================= -->
+            <section id="dashboard" class="app-section">
+                <h2 id="dashboard-title">Mi Vehículo</h2>
+                <div id="dashboard-grid">
+                    <div class="dashboard-card full-width">
+                        <h3>Kilometraje Actual</h3>
+                        <div class="value" id="km-actual">---</div>
+                        <div class="unit">km</div>
+                        <button class="btn btn-secondary" style="margin-top: 1rem;" id="btn-update-km">Actualizar Kilometraje</button>
+                    </div>
+                    <div class="dashboard-card full-width">
+                        <h3>Próximo Mantenimiento</h3>
+                        <div class="value" id="km-proximo-mantenimiento">---</div>
+                        <div class="unit">km restantes</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>SOAT</h3>
+                        <div id="soat-status" class="status-indicator">
+                            <span class="status-dot"></span>
+                            <span>---</span>
+                        </div>
+                        <button class="btn btn-secondary" style="margin-top: 1rem; display: none;" id="btn-update-soat">Actualizar</button>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Revisión Técnica</h3>
+                        <div id="revision-status" class="status-indicator">
+                            <span class="status-dot"></span>
+                            <span>---</span>
+                        </div>
+                        <button class="btn btn-secondary" style="margin-top: 1rem; display: none;" id="btn-update-revision">Actualizar</button>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3>Consejo del Día</h3>
+                    <p id="tip-del-dia">Cargando consejo...</p>
+                </div>
+            </section>
+
+            <!-- ======================= -->
+            <!-- HISTORY SECTION         -->
+            <!-- ======================= -->
+            <section id="history" class="app-section">
+                <h2>Historial de Servicios</h2>
+                <button class="btn" id="btn-add-service">Agregar Nuevo Servicio</button>
+                <ul id="history-list" style="margin-top: 1.5rem;">
+                    <!-- History items will be injected here -->
+                </ul>
+                <p id="no-history-msg" style="text-align: center; margin-top: 2rem; display: none;">No hay servicios registrados.</p>
+            </section>
+
+            <!-- ======================= -->
+            <!-- TIPS SECTION            -->
+            <!-- ======================= -->
+            <section id="tips" class="app-section">
+                <h2>Consejos de Mantenimiento</h2>
+                <div id="tips-container">
+                    <!-- Tips will be injected here -->
+                </div>
+            </section>
+
+            <!-- ======================= -->
+            <!-- SETTINGS SECTION        -->
+            <!-- ======================= -->
+            <section id="settings" class="app-section">
+                <h2>Configuración</h2>
+                <div class="card">
+                    <form id="settings-form">
+                        <h3>Datos del Vehículo</h3>
+                        <div class="form-group">
+                            <label for="settings-marca">Marca</label>
+                            <input type="text" id="settings-marca" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-modelo">Modelo</label>
+                            <input type="text" id="settings-modelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-ano">Año</label>
+                            <input type="number" id="settings-ano" required>
+                        </div>
+                        
+                        <h3>Fechas Legales</h3>
+                        <div class="form-group">
+                            <label for="settings-soat">Vencimiento del SOAT</label>
+                            <input type="date" id="settings-soat" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-revision">Vencimiento Revisión Técnica</label>
+                            <input type="date" id="settings-revision" required>
+                        </div>
+
+                        <h3>Mantenimiento</h3>
+                         <div class="form-group">
+                            <label for="settings-intervalo">Intervalo de Mantenimiento (km)</label>
+                            <input type="number" id="settings-intervalo" required>
+                        </div>
+
+                        <button type="submit" class="btn">Guardar Cambios</button>
+                    </form>
+                </div>
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h3>Zona de Peligro</h3>
+                    <button id="btn-reset-app" class="btn btn-danger">Restablecer Todos los Datos</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- ======================= -->
+        <!-- BOTTOM NAVIGATION       -->
+        <!-- ======================= -->
+        <nav id="app-nav" style="display: none;">
+            <div class="nav-item active" data-section="dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span>Principal</span>
+            </div>
+            <div class="nav-item" data-section="history">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                <span>Historial</span>
+            </div>
+            <div class="nav-item" data-section="tips">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v1a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M12 14a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path><path d="M19 20a1 1 0 0 0 1-1v-2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5V19a1 1 0 0 0 1 1z"></path></svg>
+                <span>Consejos</span>
+            </div>
+            <div class="nav-item" data-section="settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                <span>Ajustes</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ======================= -->
+    <!-- MODALS                  -->
+    <!-- ======================= -->
+    <!-- Update KM Modal -->
+    <div id="modal-update-km" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="App.closeModal('modal-update-km')">&times;</span>
+            <h3>Actualizar Kilometraje</h3>
+            <form id="form-update-km">
+                <div class="form-group">
+                    <label for="new-km">Nuevo Kilometraje (km)</label>
+                    <input type="number" id="new-km" required>
+                </div>
+                <button type="submit" class="btn">Actualizar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div id="modal-add-service" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="App.closeModal('modal-add-service')">&times;</span>
+            <h3>Agregar Servicio</h3>
+            <form id="form-add-service">
+                 <div class="form-group">
+                    <label for="service-type">Tipo de Servicio</label>
+                    <input type="text" id="service-type" required placeholder="Ej: Cambio de aceite">
+                </div>
+                <div class="form-group">
+                    <label for="service-date">Fecha</label>
+                    <input type="date" id="service-date" required>
+                </div>
+                 <div class="form-group">
+                    <label for="service-km">Kilometraje</label>
+                    <input type="number" id="service-km" required placeholder="Kilometraje en el momento del servicio">
+                </div>
+                 <div class="form-group">
+                    <label for="service-note">Nota (Opcional)</label>
+                    <input type="text" id="service-note" placeholder="Ej: Aceite sintético 5W-30">
+                </div>
+                <button type="submit" class="btn">Guardar Servicio</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Update Date Modal -->
+    <div id="modal-update-date" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="App.closeModal('modal-update-date')">&times;</span>
+            <h3 id="update-date-title"></h3>
+            <form id="form-update-date">
+                <div class="form-group">
+                    <label for="new-date">Nueva Fecha de Vencimiento</label>
+                    <input type="date" id="new-date" required>
+                    <input type="hidden" id="date-type-to-update">
+                </div>
+                <button type="submit" class="btn">Actualizar Fecha</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+    // Self-contained JavaScript application logic
+    const App = {
+        DB_KEY: 'vehicleCareData',
+        data: null,
+        
+        // Hardcoded tips data
+        tips: {
+            "Motor": [
+                "Revisa el nivel de aceite cada dos semanas y antes de viajes largos.",
+                "Cambia el aceite y el filtro según las recomendaciones del fabricante.",
+                "Presta atención a la correa de distribución; su rotura puede destruir el motor."
+            ],
+            "Neumáticos": [
+                "Mantén la presión de los neumáticos correcta. Revísala una vez al mes.",
+                "Rota los neumáticos cada 10,000 km para un desgaste uniforme.",
+                "Revisa la profundidad del dibujo. El mínimo legal suele ser 1.6 mm."
+            ],
+            "Batería": [
+                "Limpia los terminales de la batería para evitar la corrosión.",
+                "Si no usas el coche por mucho tiempo, considera un mantenedor de batería.",
+                "La mayoría de las baterías duran entre 3 y 5 años."
+            ],
+            "Frenos": [
+                "Presta atención a chirridos o ruidos al frenar; pueden indicar pastillas gastadas.",
+                "Revisa el nivel del líquido de frenos regularmente.",
+                "Si el pedal de freno se siente esponjoso, podría haber aire en el sistema."
+            ],
+            "Inspección Visual": [
+                "Asegúrate de que todas las luces (faros, intermitentes, freno) funcionen.",
+                "Revisa el estado de las escobillas del limpiaparabrisas.",
+                "Busca fugas de líquidos debajo del coche después de estar estacionado."
+            ]
+        },
+
+        // Initialize the application
+        init() {
+            // Register Service Worker for PWA capabilities
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('service-worker.js')
+                        .then(reg => console.log('Service Worker registrado', reg))
+                        .catch(err => console.log('Error al registrar Service Worker', err));
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                this.loadData();
+                this.attachEventListeners();
+                
+                if (!this.data) {
+                    this.showSection('initial-setup');
+                    document.getElementById('app-nav').style.display = 'none';
+                } else {
+                    this.renderAll();
+                    this.showSection('dashboard');
+                    document.getElementById('app-nav').style.display = 'flex';
+                }
+            });
+        },
+
+        // Load data from localStorage
+        loadData() {
+            const storedData = localStorage.getItem(this.DB_KEY);
+            if (storedData) {
+                this.data = JSON.parse(storedData);
+            }
+        },
+
+        // Save data to localStorage
+        saveData() {
+            if (this.data) {
+                localStorage.setItem(this.DB_KEY, JSON.stringify(this.data));
+            }
+        },
+        
+        // Render all dynamic parts of the UI
+        renderAll() {
+            if (!this.data) return;
+            this.renderDashboard();
+            this.renderHistory();
+            this.renderTips();
+            this.renderSettings();
+        },
+
+        // Attach all event listeners
+        attachEventListeners() {
+            // Setup form
+            document.getElementById('setup-form').addEventListener('submit', this.handleSetupSubmit.bind(this));
+            
+            // Navigation
+            document.getElementById('app-nav').addEventListener('click', this.handleNavClick.bind(this));
+            
+            // Dashboard buttons
+            document.getElementById('btn-update-km').addEventListener('click', () => this.openModal('modal-update-km'));
+            document.getElementById('btn-update-soat').addEventListener('click', () => this.openUpdateDateModal('soat'));
+            document.getElementById('btn-update-revision').addEventListener('click', () => this.openUpdateDateModal('revision'));
+            
+            // Modals forms
+            document.getElementById('form-update-km').addEventListener('submit', this.handleUpdateKm.bind(this));
+            document.getElementById('form-add-service').addEventListener('submit', this.handleAddService.bind(this));
+            document.getElementById('form-update-date').addEventListener('submit', this.handleUpdateDate.bind(this));
+
+            // History button
+            document.getElementById('btn-add-service').addEventListener('click', () => {
+                document.getElementById('form-add-service').reset();
+                document.getElementById('service-date').valueAsDate = new Date();
+                document.getElementById('service-km').value = this.data.vehiculo.kilometraje;
+                this.openModal('modal-add-service');
+            });
+            
+            // Settings form and reset button
+            document.getElementById('settings-form').addEventListener('submit', this.handleSettingsSave.bind(this));
+            document.getElementById('btn-reset-app').addEventListener('click', this.handleResetApp.bind(this));
+        },
+        
+        // --- Navigation and Section Handling ---
+        showSection(sectionId) {
+            document.querySelectorAll('.app-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeNavItem = document.querySelector(`.nav-item[data-section="${sectionId}"]`);
+            if (activeNavItem) {
+                activeNavItem.classList.add('active');
+            }
+        },
+
+        handleNavClick(e) {
+            const navItem = e.target.closest('.nav-item');
+            if (navItem) {
+                const sectionId = navItem.dataset.section;
+                this.showSection(sectionId);
+            }
+        },
+        
+        navigateWizard(step) {
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+        },
+
+        // --- Initial Setup ---
+        handleSetupSubmit(e) {
+            e.preventDefault();
+            this.data = {
+                vehiculo: {
+                    marca: document.getElementById('marca').value,
+                    modelo: document.getElementById('modelo').value,
+                    ano: parseInt(document.getElementById('ano').value),
+                    kilometraje: parseInt(document.getElementById('kilometraje-inicial').value),
+                    intervaloMantenimiento: parseInt(document.getElementById('intervalo').value),
+                    ultimoMantenimiento: parseInt(document.getElementById('kilometraje-inicial').value) // First maintenance starts now
+                },
+                fechas: {
+                    soat: document.getElementById('soat').value,
+                    revision: document.getElementById('revision').value
+                },
+                historial: []
+            };
+            this.saveData();
+            this.renderAll();
+            this.showSection('dashboard');
+            document.getElementById('app-nav').style.display = 'flex';
+        },
+        
+        // --- Dashboard Logic ---
+        renderDashboard() {
+            const { vehiculo, fechas } = this.data;
+            document.getElementById('dashboard-title').textContent = `${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})`;
+            document.getElementById('km-actual').textContent = vehiculo.kilometraje.toLocaleString('es-ES');
+            
+            const kmDesdeMantenimiento = vehiculo.kilometraje - vehiculo.ultimoMantenimiento;
+            const kmParaMantenimiento = vehiculo.intervaloMantenimiento - kmDesdeMantenimiento;
+            document.getElementById('km-proximo-mantenimiento').textContent = kmParaMantenimiento.toLocaleString('es-ES');
+
+            this.updateDateStatus('soat', fechas.soat);
+            this.updateDateStatus('revision', fechas.revision);
+            
+            this.renderRandomTip();
+        },
+        
+        updateDateStatus(type, dateString) {
+            const statusEl = document.getElementById(`${type}-status`);
+            const updateBtn = document.getElementById(`btn-update-${type}`);
+            if (!dateString) {
+                statusEl.innerHTML = `<span class="status-dot"></span><span>No configurado</span>`;
+                statusEl.className = 'status-indicator';
+                updateBtn.style.display = 'block';
+                return;
+            }
+            
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            const fechaVencimiento = new Date(dateString + 'T00:00:00'); // Ensure local timezone
+            
+            const diffTime = fechaVencimiento - hoy;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            let statusClass = 'status-green';
+            let statusText = `Vence en ${diffDays} días`;
+            updateBtn.style.display = 'none';
+
+            if (diffDays < 0) {
+                statusClass = 'status-red';
+                statusText = `Vencido hace ${Math.abs(diffDays)} días`;
+                updateBtn.style.display = 'block';
+            } else if (diffDays === 0) {
+                statusClass = 'status-orange';
+                statusText = 'Vence hoy';
+            } else if (diffDays <= 7) {
+                statusClass = 'status-yellow';
+            }
+            
+            statusEl.className = `status-indicator ${statusClass}`;
+            statusEl.innerHTML = `<span class="status-dot"></span><span>${statusText}</span>`;
+        },
+        
+        renderRandomTip() {
+            const allTips = Object.values(this.tips).flat();
+            const randomIndex = Math.floor(Math.random() * allTips.length);
+            document.getElementById('tip-del-dia').textContent = allTips[randomIndex];
+        },
+        
+        handleUpdateKm(e) {
+            e.preventDefault();
+            const newKm = parseInt(document.getElementById('new-km').value);
+            if (newKm >= this.data.vehiculo.kilometraje) {
+                this.data.vehiculo.kilometraje = newKm;
+                this.saveData();
+                this.renderDashboard();
+                this.closeModal('modal-update-km');
+            } else {
+                alert('El nuevo kilometraje no puede ser menor al actual.');
+            }
+        },
+
+        // --- History Logic ---
+        renderHistory() {
+            const list = document.getElementById('history-list');
+            const noHistoryMsg = document.getElementById('no-history-msg');
+            list.innerHTML = '';
+            
+            if (this.data.historial.length === 0) {
+                noHistoryMsg.style.display = 'block';
+            } else {
+                noHistoryMsg.style.display = 'none';
+                // Sort by date descending
+                const sortedHistory = [...this.data.historial].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                
+                sortedHistory.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <h4>${item.tipo}</h4>
+                        <p><strong>Fecha:</strong> ${new Date(item.fecha + 'T00:00:00').toLocaleDateString()}</p>
+                        <p><strong>Kilometraje:</strong> ${item.km.toLocaleString('es-ES')} km</p>
+                        ${item.nota ? `<p class="note"><strong>Nota:</strong> ${item.nota}</p>` : ''}
+                    `;
+                    list.appendChild(li);
+                });
+            }
+        },
+        
+        handleAddService(e) {
+            e.preventDefault();
+            const newService = {
+                tipo: document.getElementById('service-type').value,
+                fecha: document.getElementById('service-date').value,
+                km: parseInt(document.getElementById('service-km').value),
+                nota: document.getElementById('service-note').value
+            };
+            
+            this.data.historial.push(newService);
+            
+            // Check if this service should reset the maintenance counter
+            // A simple heuristic: if it contains "mantenimiento" or "aceite"
+            const serviceTypeLower = newService.tipo.toLowerCase();
+            if (serviceTypeLower.includes('mantenimiento') || serviceTypeLower.includes('aceite')) {
+                this.data.vehiculo.ultimoMantenimiento = newService.km;
+            }
+            
+            // Also update current KM if service KM is higher
+            if (newService.km > this.data.vehiculo.kilometraje) {
+                this.data.vehiculo.kilometraje = newService.km;
+            }
+            
+            this.saveData();
+            this.renderHistory();
+            this.renderDashboard(); // To update maintenance counter
+            this.closeModal('modal-add-service');
+        },
+        
+        // --- Tips Logic ---
+        renderTips() {
+            const container = document.getElementById('tips-container');
+            container.innerHTML = '';
+            for (const category in this.tips) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'tip-category';
+                let tipsHtml = `<div class="card"><h3>${category}</h3>`;
+                this.tips[category].forEach(tip => {
+                    tipsHtml += `<div class="tip-item">${tip}</div>`;
+                });
+                tipsHtml += '</div>';
+                categoryDiv.innerHTML = tipsHtml;
+                container.appendChild(categoryDiv);
+            }
+        },
+
+        // --- Settings Logic ---
+        renderSettings() {
+            const { vehiculo, fechas } = this.data;
+            document.getElementById('settings-marca').value = vehiculo.marca;
+            document.getElementById('settings-modelo').value = vehiculo.modelo;
+            document.getElementById('settings-ano').value = vehiculo.ano;
+            document.getElementById('settings-soat').value = fechas.soat;
+            document.getElementById('settings-revision').value = fechas.revision;
+            document.getElementById('settings-intervalo').value = vehiculo.intervaloMantenimiento;
+        },
+        
+        handleSettingsSave(e) {
+            e.preventDefault();
+            this.data.vehiculo.marca = document.getElementById('settings-marca').value;
+            this.data.vehiculo.modelo = document.getElementById('settings-modelo').value;
+            this.data.vehiculo.ano = parseInt(document.getElementById('settings-ano').value);
+            this.data.fechas.soat = document.getElementById('settings-soat').value;
+            this.data.fechas.revision = document.getElementById('settings-revision').value;
+            this.data.vehiculo.intervaloMantenimiento = parseInt(document.getElementById('settings-intervalo').value);
+            
+            this.saveData();
+            this.renderAll();
+            alert('Configuración guardada con éxito.');
+            this.showSection('dashboard');
+        },
+        
+        handleResetApp() {
+            if (confirm('¿Estás seguro? Se borrarán todos los datos del vehículo de forma permanente.')) {
+                localStorage.removeItem(this.DB_KEY);
+                window.location.reload();
+            }
+        },
+        
+        // --- Modal Logic ---
+        openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        },
+        
+        closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        },
+        
+        openUpdateDateModal(type) {
+            document.getElementById('update-date-title').textContent = `Actualizar Fecha de ${type === 'soat' ? 'SOAT' : 'Revisión Técnica'}`;
+            document.getElementById('date-type-to-update').value = type;
+            document.getElementById('new-date').value = this.data.fechas[type];
+            this.openModal('modal-update-date');
+        },
+        
+        handleUpdateDate(e) {
+            e.preventDefault();
+            const type = document.getElementById('date-type-to-update').value;
+            const newDate = document.getElementById('new-date').value;
+            
+            this.data.fechas[type] = newDate;
+            this.saveData();
+            this.renderDashboard();
+            this.closeModal('modal-update-date');
+        }
+    };
+
+    // Start the app
+    App.init();
+
+    </script>
+</body>
+</html>
