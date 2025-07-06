@@ -360,7 +360,8 @@
             init() {
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', () => {
-                        navigator.serviceWorker.register('service-worker.js')
+                        // REGISTRO CORREGIDO Y MÁS ROBUSTO
+                        navigator.serviceWorker.register('./service-worker.js', { scope: './' })
                             .then(reg => console.log('Service Worker registrado con éxito.', reg))
                             .catch(err => console.log('Error al registrar Service Worker:', err));
                     });
