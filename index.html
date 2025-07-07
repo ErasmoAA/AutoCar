@@ -367,6 +367,9 @@
                             .catch(err => console.log('Error al registrar Service Worker:', err));
                     });
                 }
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission();
+                }
                 document.addEventListener('DOMContentLoaded', () => {
                     this.loadData();
                     this.attachEventListeners();
@@ -434,6 +437,7 @@
                 this.updateDateStatus('soat', fechas.soat);
                 this.updateDateStatus('revision', fechas.revision);
                 this.renderRandomTip();
+                this.checkNotifications();
             },
             updateDateStatus(type, dateString) {
                 const statusEl = document.getElementById(`${type}-status`);
@@ -471,6 +475,39 @@
                 this.saveData(); this.renderHistory(); this.renderDashboard(); this.closeModal('modal-add-service');
             },
             renderTips() { const container = document.getElementById('tips-container'); container.innerHTML = ''; for (const category in this.tips) { const categoryDiv = document.createElement('div'); categoryDiv.className = 'tip-category'; let tipsHtml = `<div class="card"><h3>${category}</h3>`; this.tips[category].forEach(tip => { tipsHtml += `<div class="tip-item">${tip}</div>`; }); tipsHtml += '</div>'; categoryDiv.innerHTML = tipsHtml; container.appendChild(categoryDiv); } },
+            checkNotifications() {
+                if (!('Notification' in window) || Notification.permission !== 'granted' || !this.data) return;
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                ['soat','revision'].forEach(type => {
+                    const dateStr = this.data.fechas[type];
+                    if (!dateStr) return;
+                    const exp = new Date(dateStr + 'T00:00:00');
+                    const diffDays = Math.floor((exp - today) / (1000*60*60*24));
+                    const name = type === 'soat' ? 'SOAT' : 'Revisión Técnica';
+                    const notify = msg => {
+                        if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+                            navigator.serviceWorker.getRegistration().then(reg => {
+                                if (reg) { reg.showNotification(name, { body: msg }); }
+                                else { new Notification(name, { body: msg }); }
+                            });
+                        } else {
+                            new Notification(name, { body: msg });
+                        }
+                    };
+                    if ([30,7,1,0].includes(diffDays)) {
+                        const messages = {
+                            30: `Tu ${name} vence en 30 días.`,
+                            7: `Tu ${name} vence en 7 días.`,
+                            1: `Tu ${name} vence mañana.`,
+                            0: `Tu ${name} vence hoy.`
+                        };
+                        notify(messages[diffDays]);
+                    } else if (diffDays < 0 && diffDays % 3 === 0) {
+                        notify(`Tu ${name} está vencido hace ${Math.abs(diffDays)} días.`);
+                    }
+                });
+            },
             renderSettings() { const { vehiculo, fechas } = this.data; document.getElementById('settings-marca').value = vehiculo.marca; document.getElementById('settings-modelo').value = vehiculo.modelo; document.getElementById('settings-ano').value = vehiculo.ano; document.getElementById('settings-soat').value = fechas.soat; document.getElementById('settings-revision').value = fechas.revision; document.getElementById('settings-intervalo').value = vehiculo.intervaloMantenimiento; },
             handleSettingsSave(e) {
                 e.preventDefault();
