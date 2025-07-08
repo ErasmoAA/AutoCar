@@ -427,7 +427,7 @@
             init() {
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', () => {
-                        // Registro del Service Worker
+
                         navigator.serviceWorker.register('./service-worker.js', { scope: './' })
                             .then(reg => console.log('Service Worker registrado con éxito.', reg))
                             .catch(err => console.log('Error al registrar Service Worker:', err));
@@ -439,7 +439,7 @@
                 document.addEventListener('DOMContentLoaded', () => {
                     this.loadData();
                     this.applyTheme();
-                    this.initNotifications();
+
                     this.attachEventListeners();
                     const mql = window.matchMedia('(prefers-color-scheme: dark)');
                     mql.addEventListener('change', () => this.applyTheme());
@@ -592,14 +592,7 @@
                 this.saveData(); this.renderHistory(); this.renderDashboard(); this.closeModal('modal-add-service');
             },
             renderTips() { const container = document.getElementById('tips-container'); container.innerHTML = ''; for (const category in this.tips) { const categoryDiv = document.createElement('div'); categoryDiv.className = 'tip-category'; let tipsHtml = `<div class="card"><h3>${category}</h3>`; this.tips[category].forEach(tip => { tipsHtml += `<div class="tip-item">${tip}</div>`; }); tipsHtml += '</div>'; categoryDiv.innerHTML = tipsHtml; container.appendChild(categoryDiv); } },
-            initNotifications() {
-                if (!('Notification' in window)) return;
-                if (Notification.permission === 'default') {
-                    Notification.requestPermission();
-                }
-                this.checkNotifications();
-                setInterval(() => this.checkNotifications(), 12 * 60 * 60 * 1000);
-            },
+
             checkNotifications() {
                 if (!('Notification' in window) || Notification.permission !== 'granted' || !this.data) return;
                 const today = new Date();
