@@ -20,6 +20,3 @@
     }
   ]
 }
-```
-
-**Cambio importante:** He cambiado `"start_url": "index.html"` por `"start_url": "."`. Esto a veces ayuda a que los navegadores encuentren la página principal de forma más fiable.

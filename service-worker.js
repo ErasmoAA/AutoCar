@@ -61,3 +61,23 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+// Mostrar notificación cuando el usuario pulsa en ella
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow('./'));
+});
+
+// Soporte básico para push (si se configura un servidor de push)
+self.addEventListener('push', event => {
+  if (event.data) {
+    const data = event.data.json();
+    const title = data.title || 'Recordatorio';
+    const options = {
+      body: data.body || '',
+      icon: 'icons/icon-192x192.png',
+      badge: 'icons/icon-192x192.png'
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+  }
+});
