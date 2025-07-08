@@ -427,7 +427,7 @@
             init() {
                 if ('serviceWorker' in navigator) {
                     window.addEventListener('load', () => {
-                        // REGISTRO CORREGIDO Y MÁS ROBUSTO
+
                         navigator.serviceWorker.register('./service-worker.js', { scope: './' })
                             .then(reg => console.log('Service Worker registrado con éxito.', reg))
                             .catch(err => console.log('Error al registrar Service Worker:', err));
@@ -439,6 +439,7 @@
                 document.addEventListener('DOMContentLoaded', () => {
                     this.loadData();
                     this.applyTheme();
+
                     this.attachEventListeners();
                     const mql = window.matchMedia('(prefers-color-scheme: dark)');
                     mql.addEventListener('change', () => this.applyTheme());
@@ -591,6 +592,7 @@
                 this.saveData(); this.renderHistory(); this.renderDashboard(); this.closeModal('modal-add-service');
             },
             renderTips() { const container = document.getElementById('tips-container'); container.innerHTML = ''; for (const category in this.tips) { const categoryDiv = document.createElement('div'); categoryDiv.className = 'tip-category'; let tipsHtml = `<div class="card"><h3>${category}</h3>`; this.tips[category].forEach(tip => { tipsHtml += `<div class="tip-item">${tip}</div>`; }); tipsHtml += '</div>'; categoryDiv.innerHTML = tipsHtml; container.appendChild(categoryDiv); } },
+
             checkNotifications() {
                 if (!('Notification' in window) || Notification.permission !== 'granted' || !this.data) return;
                 const today = new Date();
